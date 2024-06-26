@@ -1,0 +1,56 @@
+// link to the code that computes the Landsat LST
+var LandsatLST = require('users/sofiaermida/landsat_smw_lst:modules/Landsat_LST.js')
+
+
+// select region of interest, date range, and landsat satellite
+//var geometry = ee.Geometry.Rectangle([-8.91, 40.0, -8.3, 40.4]);
+var satellite = 'L8';
+var date_start = '2019-12-21';
+var date_end = '2020-03-19';
+var use_ndvi = true;
+
+//OBS: Em 2021
+//Ver: 21 Dez - 19 Mar; Out: 20 Mar - 20 Jun
+//Inv: 21 Jun - 21 Set; Pri: 22 Set - 21 Dez
+
+// get landsat collection with added variables: NDVI, FVC, TPW, EM, LST
+var LandsatColl = LandsatLST.collection(satellite, date_start, date_end, geometry, use_ndvi);
+print(LandsatColl);
+
+// select the first feature
+var exImage = LandsatColl.first();
+
+//Paleta de cores
+var cmap1 = ['blue', 'cyan', 'green', 'yellow', 'red'];
+var cmap2 = ['F2F2F2','EFC2B3','ECB176','E9BD3A','E6E600','63C600','00A600']; 
+
+// Clip do layer
+var clip = exImage.select('LST').clip(geometry);
+
+// Calcular as estatísticas resumidas para ver qual é o min e max de tempeatura
+var estatisticas = clip.reduceRegion({
+  reducer: ee.Reducer.minMax(),
+  geometry: geometry,
+  scale: 30, // Resolução espacial em metros
+});
+// Imprimir o dicionário de estatísticas
+print('Estatísticas:', estatisticas);
+
+Map.centerObject(geometry);
+
+//O valor min e max está de acordo com os valores de temperatura da imagem
+Map.addLayer(clip,{min:260, max:320, palette:cmap1}, 'LST_clip');
+
+
+
+// uncomment the code below to export a image band to your drive
+/*
+Export.image.toDrive({
+  image: exImage.select('LST'),
+  description: 'LST',
+  scale: 30,
+  region: geometry,
+  fileFormat: 'GeoTIFF',
+});
+//
+*/
