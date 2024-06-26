@@ -1,0 +1,45 @@
+var area = geometry;
+
+var startDate = '2022-01-01';
+var endDate = '2023-01-01';
+
+// -----------------------------------------
+
+Map.centerObject(area, 10);
+Map.addLayer(area, {}, 'Município');
+
+// -----------------------------------------
+
+// Adquirindo imagens
+var imagens = ee.ImageCollection("LANDSAT/LC09/C02/T1_TOA")
+  .filterDate(startDate, endDate)
+  .filterMetadata("CLOUD_COVER", 'less_than', 5)
+  .mean()
+  .clip(area);
+
+// Paletta de cores para os indices de vegetaçao
+var palette = [
+    'FFFFFF', 'CE7E45', 'DF923D', 'F1B555', 'FCD163', '99B718',
+    '74A901', '66A000', '529400', '3E8601', '207401', '056201',
+    '004C00', '023B01', '012E01', '011D01', '011301'];
+    
+// Cacular o NDVI
+//Lembrar de alterar de acordo com qual Landsat
+var nir = imagens.select('B5');
+var red = imagens.select('B4');
+
+var ndvi = nir.subtract(red).divide(nir.add(red)).rename('NDVI');
+
+Map.addLayer(ndvi, {min: -1, max: 1, palette: palette}, 'NDVI');
+
+//-----------------------------------------------------
+/*
+// Exportando imagem
+Export.image.toDrive({
+  image: ndvi,
+  description: 'NDVI_'+startDate+'_'+endDate,
+  folder: 'ImagensGee',
+  region: area,
+  scale: 30
+});
+*/
