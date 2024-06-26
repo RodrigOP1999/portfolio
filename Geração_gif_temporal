@@ -1,0 +1,38 @@
+//Definindoo a área de estudo
+var area = geometry;
+
+Map.centerObject(area);                                                         //Centralizando a área de estudo
+Map.addLayer(area);                                                            //Plotando minha área de estudo
+
+// Filtra a coleção de imagens Landsat para identificar a Órbita e Faixa
+var collection = ee.ImageCollection("LANDSAT/LC08/C02/T1_TOA")
+  .filterBounds(area)                                                       //Filtrando área
+  .filterDate('2022-01-01', '2022-12-31');                                 //Filtrando data
+
+// Obter valor de órbita e faixa de imageamento da área
+var image = collection.first();  //Selecionando a primeira imagem
+
+var row = image.get('WRS_ROW');                                         //Pegando o valor de faixa
+var path = image.get('WRS_PATH');                                      //Pegando o valor de órbita
+
+
+//Carregar a coleção de imagens Landsat para fazer o gif
+var allImages = ee.ImageCollection("LANDSAT/LC08/C02/T1_TOA")       //Carregar a coleção
+    .filter(ee.Filter.eq('WRS_PATH', path))                        //Filtrando a órbita
+    .filter(ee.Filter.eq('WRS_ROW', row))                         //Filtrando a faixa
+    .filterDate("2014-01-01","2024-01-01")                       //Filtrando por data
+    .filterMetadata("CLOUD_COVER","less_than",15)               //Filtrando pela cobertura de nuvens             
+    .select('B4','B3','B2')                                    //Selecionando bandas
+    .map(function(image) {                                    //Função para ajustar em 8bits e recortá-la
+        return image.clip(area).multiply(512).uint8();
+    });
+
+
+//Exportar o gif para o Drive
+Export.video.toDrive({                                    //Função para Exportar
+  collection: allImages,                                 //Anuncio a variável
+  description: 'RGB_TimeLapse',                         //Descrevo o nome do arquivo
+  dimensions: 720,                                     //Qualidade do vídeo
+  framesPerSecond: 6,                                 //Defino os frames por second
+  region: area                                        //Centralizo para a área de estudo
+});
