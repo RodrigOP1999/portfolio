@@ -1,0 +1,34 @@
+// Vamos trabalhar agora com filtros de imagem
+
+//Selecianada o shape, agora filtramos o que queremos do metadato da tabela
+var areaFilter = limMunicipios.filter(ee.Filter.and(
+  ee.Filter.eq('ADM0_NAME', 'Brazil'),
+  ee.Filter.eq('ADM1_NAME','Sao Paulo'),
+  ee.Filter.eq('ADM2_NAME','Sao Paulo')
+  ));
+//Nota: eq é para pegar o equivalente dos atributos na coluna da tabela
+//Esse tipo de filtragem é para filtrar melhor a cidade que queremos, evitando duplicada com outros estados ou países
+
+Map.centerObject(areaFilter);
+Map.addLayer(areaFilter,{},'Município selecionado');
+
+//Adquirindo imanges Landsat 8 e aplicando filtros
+var land8 = ee.ImageCollection("LANDSAT/LC08/C02/T1_TOA")  //Chamando imagem l8
+    .filterBounds(areaFilter)                              //Puxando as imagens para a área
+    .filterDate("2023-01-01","2023-07-01")                 //Filtrando por data
+    .filterMetadata("CLOUD_COVER","less_than",10)          //Filtrando pela cobertura de nuvens
+    .mosaic()                                              //Criar o mosaico das imagens puxadas
+    .clip(areaFilter)                                     //Recortando para a área de interesse
+    .toFloat();                                          // Inseri essa linha no código para conseguir baixa a imagem, as bandas não batiam     
+
+Map.addLayer(land8, {bands:['B4','B3','B2'], max: 0.3},'Mosaico da área de estudo recortado');
+
+Export.image.toDrive({
+  image: land8,
+  description: 'RGB_clip_Mosaico',  // Descrição do arquivo
+  folder: 'ImagensGee',  // Pasta no Google Drive
+  fileNamePrefix: 'RGB_clip_Mosaico',  // Prefixo do nome do arquivo
+  scale: 30,
+  region: areaFilter.geometry().bounds(),  // Região de interesse
+  maxPixels: 1e13  // Número máximo de pixels permitidos
+});
