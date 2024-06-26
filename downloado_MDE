@@ -1,0 +1,60 @@
+//Minha área de estudo
+var area = geometry;
+
+//Definindo a banda da imagem
+var meu_srtm= srtm.select('elevation');
+
+//Centralizando e Plotando a imagem e tabela para conferir
+//Map.addLayer(meu_srtm, {}, 'srtm de 30 metros', false);
+Map.addLayer(area,{}, 'Área de estudo', true);
+Map.centerObject(area);
+
+//Recortando para a minha área de estudo
+var clipImage = meu_srtm.clip(area);
+
+var palette = ['001137', '0aab1e', 'e7eb05', 'ff4a2d', 'e90000'];
+
+// Adquirindo valores máximos e mínimos
+clipImage.reduceRegion({
+  reducer: ee.Reducer.minMax(),
+  geometry: area.geometry(),
+  scale: 30,
+  maxPixels: 1e7,
+  bestEffort: true
+// A função evaluate no Google Earth Engine (GEE) é utilizada para extrair informações de objetos do GEE 
+//e trazê-las para o ambiente cliente, como um navegador web.
+}).evaluate(function(result) { 
+  if (result) {
+    var min_srtm = result.elevation_min;
+    var max_srtm = result.elevation_max;
+    print('Min srtm:', min_srtm);
+    print('Max srtm:', max_srtm);
+    
+    var visParams = {
+      bands: ['elevation'],
+      min: min_srtm,
+      max: max_srtm,
+      palette: palette
+    };
+    
+    // Adciona a camada ao mapa usando os parâmetros de visualização estabelecido
+    Map.addLayer(clipImage, visParams, 'SRTM_minMax');
+  } else {
+    print('Erro ao avaliar os valores mínimos e máximos de NDVI');
+  }
+});
+
+// Criar um título
+var title = ui.Label('Modelo Digital de Elevação (MDE)');
+
+// Estilizar o título
+title.style().set({
+  position: 'top-center',
+  fontSize: '24px',
+  fontWeight: 'bold',
+  color: 'black',
+  backgroundColor: 'white'
+});
+
+// Adicionar o título ao mapa
+Map.add(title);
