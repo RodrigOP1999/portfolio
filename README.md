@@ -7,15 +7,12 @@ Bem-vindo ao meu portfólio no GitHub! Sou Rodrigo Passos Fernandes, um profissi
 
 ### Geração de GIF Temporal
 **Descrição:** Criação de GIFs animados para visualização temporal de dados geoespaciais.  
-**Tecnologias:** GEE, QGIS
 
 ### Mosaico de Imagens Landsat e Confecção de mapas
 **Descrição:** Montagem de mosaicos a partir de imagens de satélite Landsat.  
-**Tecnologias:** GEE, QGIS  
 
 ### NDVI e NDBI
 **Descrição:** Cálculo e análise de índices ambientais utilizando dados de satélite.  
-**Tecnologias:** GEE, QGIS
 
 ### Entre outros, como levantamentos de terrenos e plantas geográficas
 
