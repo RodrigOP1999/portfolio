@@ -1,0 +1,78 @@
+#Importando biblioteca
+library(tidyverse)
+library(lubridate)
+library(ggplot2)
+library(ggtext)
+
+#Importando dados
+URL_dados <- c( "caminho do seu dado
+)
+
+# Criar diretório 'Dados' se não existir
+dir.create('Dados/', showWarnings = FALSE)
+
+# Download dos arquivos por linha de comando:
+for (i in seq_along(URL_dados)) {
+  download.file(
+    url = URL_dados[i],
+    destfile = paste0('Dados/', names(URL_dados)[i], '.csv')
+  )
+  cat('Arquivo', i, 'baixado com sucesso!\n')
+}
+
+# Organização dos dados
+Leitura_Personalizada <- function(Arquivo) {
+  dados <-
+    read_csv2(
+      file = Arquivo,
+      skip = 10,
+      na = 'null') %>%
+    select(!starts_with('...')) %>%
+    rename_with(~c('VARIÁVEIS', 'DOS', 'SEUS', 'DADOS')) %>%
+    mutate(ID = Arquivo %>%
+             str_remove_all('Dados/|\\.csv') %>%
+             str_replace_all("_", " "))  # Corrigindo o nome para facilitar o filtro
+  
+  return(dados)
+}
+
+# Executando a função:
+arq <- list.files(path = 'Dados/', pattern = '.csv', full.names = TRUE)
+df <- purrr::map_df(.x = arq, .f = ~Leitura_Personalizada(Arquivo = .x))
+
+# Filtrando dados para as quatro capitais do Sudeste
+capitais_sudeste <- c("SEUS", "DADOS", "DA", "SUA", "TABELA")
+df <- df %>% filter(ID %in% capitais_sudeste)
+
+# Verificação dos dados importados
+print(unique(df$ID))
+
+# Criando o gráfico de distribuição da Umidade Relativa do Ar com facet_wrap
+grafico_umidade <- ggplot(df, aes(x = Umi)) +
+  geom_density(aes(fill = ID), alpha = 0.5) +
+  labs(
+    title = "Distribuição da Umidade Relativa do Ar nas Capitais do Sudeste",
+    x = "Umidade Relativa do Ar (%)",
+    y = "Densidade",
+    fill = "Capital",
+    caption = "Fonte dos dados XXXX • Elaborado por @cienciacomfernandesr"
+  ) +
+  facet_wrap(~ ID) +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "Montserrat", size = 12)
+  )
+
+# Visualizando o gráfico
+print(grafico_umidade)
+
+# Salvando o gráfico
+ggsave(
+  filename = "NOME_DO_SEU_ARQUIVO.png",
+  plot = grafico_umidade,
+  device = "png",
+  width = 12,
+  height = 8,
+  units = "in",
+  bg = "white"
+)
