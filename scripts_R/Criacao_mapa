@@ -1,0 +1,75 @@
+# Criando uma pasta para armazenar os dados
+dir.create("Atividade/", showWarnings = FALSE)
+
+library(geobr)
+library(tidyverse)
+library(ggplot2)
+library(ggspatial)
+library(ggpattern)  
+
+view(list_geobr())
+
+Biomas <- read_biomes()
+
+view(Biomas$name_biome)
+
+ggplot() +
+  geom_sf_pattern( 
+    data = Biomas %>% filter(name_biome == "Sistema Costeiro"), # Filtra o limite marítimo
+    pattern = "stripe", # Define o padrão de preenchimento (listras)
+    pattern_angle = 70, # Ângulo das listras (45 graus)
+    pattern_density = 0.1, # Espaçamento entre as listras
+    pattern_fill = "blue", # Cor do padrão
+    pattern_color = "blue", # Cor das linhas do padrão
+    color = "blue", # Define a cor da borda
+    fill = NA, # Sem preenchimento
+    size = 1 # Espessura da linha
+  ) +
+  geom_sf(
+    data = Biomas %>% filter(name_biome != "Sistema Costeiro"), # Exclui o limite marítimo
+    mapping = aes(fill = name_biome)
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Amazônia" = "#228B22",
+      "Caatinga" = "#FFFACD",
+      "Cerrado" = "#FFA07A",
+      "Mata Atlântica" = "#98FB98",
+      "Pampa" = "#BC8F8F",
+      "Pantanal" = "#9370DB"
+    ),
+    breaks = unique(Biomas$name_biome) # Mantém apenas os biomas na legenda
+  ) +
+  labs(
+    title = "Biomas",
+    subtitle = "Os 6 biomas Brasileiros",
+    fill = "Bioma",
+    caption = "DATUM SIRGAS 2000 | Fonte dos dados: IBGE, 2019 | Elaborado por @cienciacomfernandesr"
+  ) +
+  theme_light() +
+  theme(
+    text = element_text(family = "serif"),
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(face = "italic", size = 12, hjust = 0.5),
+    legend.position = "right",
+    legend.text = element_text(face = "bold", size = 8)
+  ) +
+  annotation_scale(
+    location = "br",
+    bar_cols = c("darkgray", "white")
+  ) +
+  annotation_north_arrow(
+    style = north_arrow_fancy_orienteering(
+      fill = c("darkgrey", "white")
+    )
+  )
+
+
+# # Salvando o mapa em alta resolução
+ggsave(
+  filename = "mapa_biomas_brasileiros.png",
+  dpi = 500,
+  width = 10,
+  height = 7,
+  units = "in"
+)
